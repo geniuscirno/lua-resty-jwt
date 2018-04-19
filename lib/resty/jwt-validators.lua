@@ -51,6 +51,11 @@ end
 
 -- Local function to make sure that a value is the given type
 local function ensure_is_type(v, t, e, ...)
+  if t == "number" then
+    if type(v) == "userdata" and getmetatable(v).__type == "number_long" then
+      return true
+    end
+  end
   return type(v) == t and v or error(string.format(e, ...), 0)
 end
 
@@ -386,6 +391,16 @@ define_validator("is_not_expired", function()
           return val and greater_than_function(val, (system_clock() - system_leeway))
        end),
      "expired at"
+  )
+end)
+
+define_validator("is_not_expired_number_long", function()
+  return format_date_on_error(
+      _M.chain(validata_is_date,
+      function(val)
+          return val and val > json.number_long(ngx.now())  
+      end),
+      "expired at"
   )
 end)
 
